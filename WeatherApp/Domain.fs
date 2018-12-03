@@ -18,6 +18,9 @@ module Weather =
         | PartialCloudy, _ | _, PartialCloudy-> PartialCloudy
         | Sunny, _ | _, Sunny -> Sunny
 
+type Position = 
+    { Longitude: float
+      Latitude: float }
 
 type Wind = 
     { Degree : decimal

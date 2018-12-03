@@ -9,11 +9,8 @@ open Plugin.Geolocator
 
 module App = 
     open System
+    open Domain
 
-    type Position = 
-        { Longitude: float
-          Latitude: float }
-    
     type Model = 
       { City:string
         Coords: Position }

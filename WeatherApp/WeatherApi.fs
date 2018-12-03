@@ -47,8 +47,11 @@ let convert (forecast:ForecastApi.Root) =
     { City = city 
       Days = forecasts }
 
-let get latitude longitude = 
-    let u = url "760628d3c2b9ede15fb9f57de25cd3ee" latitude longitude
+/// This apikey will be available during the fsharp advent. If you want to continue, please subscribe by using a free account to https://openweathermap.org
+let ApiKey = "760628d3c2b9ede15fb9f57de25cd3ee"
+
+let get position = 
+    let u = url ApiKey position.Latitude position.Longitude
     u.ToString () 
     |> Http.AsyncRequestString 
     |> Async.map (ForecastApi.Parse >> convert)

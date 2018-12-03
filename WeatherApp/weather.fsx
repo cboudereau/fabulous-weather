@@ -3,4 +3,8 @@
 #load "Domain.fs"
 #load "WeatherApi.fs"
 
-WeatherApi.get 48.8713344 2.3462986 |> Async.RunSynchronously
+open Domain
+
+{ Latitude=48.8713344; Longitude= 2.3462986 } 
+|> WeatherApi.get 
+|> Async.RunSynchronously
