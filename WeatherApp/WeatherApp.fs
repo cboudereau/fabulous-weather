@@ -108,7 +108,15 @@ module App =
     let update msg model =
         match msg with
         | PositionChanged p ->
-            model, WeatherApi.get p |> Async.map WeatherReceived |> Cmd.ofAsyncMsg
+            model, 
+            WeatherApi.get p |> Async.map WeatherReceived 
+            |> Async.Catch
+            |> Async.map (function 
+                | Choice1Of2 x -> Some x 
+                | Choice2Of2 _ -> 
+                    //Add logging here to handle api limitations, network issue, ...
+                    None)
+            |> Cmd.ofAsyncMsgOption
         | WeatherReceived update ->
             update, trackPosition () |> Cmd.ofAsyncMsg
     
