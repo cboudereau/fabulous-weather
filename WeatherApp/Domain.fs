@@ -51,5 +51,6 @@ type Forecast =
 
 type CityForecast = 
     { City:string
+      Country:string
       Days:Forecast list }
 

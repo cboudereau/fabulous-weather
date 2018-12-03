@@ -1,7 +1,5 @@
-﻿// Copyright 2018 Fabulous contributors. See LICENSE.md for license.
-namespace WeatherApp
+﻿namespace WeatherApp
 
-open System.Diagnostics
 open Fabulous.Core
 open Fabulous.DynamicViews
 open Xamarin.Forms
@@ -15,7 +13,7 @@ module App =
         | PositionChanged of Position
         | WeatherReceived of CityForecast
 
-    let initModel = { City= "Waiting signal.."; Days=[] }
+    let initModel = { City= "Waiting gps..."; Country=""; Days=[] }
 
     let locator = CrossGeolocator.Current
     locator.DesiredAccuracy <- 100.
@@ -57,6 +55,56 @@ module App =
             |> Cmd.ofAsyncMsgOption
         initModel, cmd 
 
+    open FSharp.Data.UnitSystems.SI.UnitSymbols
+    let mockup () = 
+        { City="FONTAINEBLEAU"
+          Country="FR"
+          Days=
+            [ { Date = DateTime.Now
+                Weather = Cloudy
+                MinTemp = 270m<K>
+                MaxTemp = 277m<K>
+                Humidity=98
+                Wind = 
+                    { Speed = 15m<m/s>
+                      Degree = 270m } }
+
+              { Date = DateTime.Now.AddDays 1.
+                Weather = Sunny
+                MinTemp = 300m<K>
+                MaxTemp = 310m<K>
+                Humidity=10
+                Wind = 
+                    { Speed = 2m<m/s>
+                      Degree = 20m } } 
+                      
+              { Date = DateTime.Now.AddDays 2.
+                Weather = Rainy
+                MinTemp = 280m<K>
+                MaxTemp = 285m<K>
+                Humidity=10
+                Wind = 
+                    { Speed = 50m<m/s>
+                      Degree = 180m } } 
+                      
+              { Date = DateTime.Now.AddDays 3.
+                Weather = PartialCloudy
+                MinTemp = 250m<K>
+                MaxTemp = 260m<K>
+                Humidity=100
+                Wind = 
+                    { Speed = 28m<m/s>
+                      Degree = 280m } } 
+                      
+              { Date = DateTime.Now.AddDays 4.
+                Weather = Snowy
+                MinTemp = 250m<K>
+                MaxTemp = 257m<K>
+                Humidity=80
+                Wind = 
+                    { Speed = 15m<m/s>
+                      Degree = 200m } } ] }, Cmd.none
+
     let update msg model =
         match msg with
         | PositionChanged p ->
@@ -93,7 +141,13 @@ module App =
             | Stormy -> "stormy.png"
             | Sunny -> "sunny.png"
         
-        let image source = View.Image(source=source)
+        let stack height child = 
+            View.StackLayout(
+                heightRequest=height,
+                verticalOptions=LayoutOptions.CenterAndExpand,
+                children=[child])
+
+        let image source = View.Image(source=source) |> stack 100.
 
         let wind = function
             | x when x < 45m -> "N"
@@ -123,16 +177,16 @@ module App =
                   forecast.Date.Day |> day |> bold 20. Color.Beige 
                   empty 15.
                   forecast.Weather |> weatherIcon |> image
-                  empty 15.
                   forecast.MaxTemp |> Temperature.celcius |> temp 22. Color.Beige
                   separator Color.SkyBlue
                   forecast.MinTemp |> Temperature.celcius |> temp 22. Color.SkyBlue
                   empty 30.
                   forecast.Humidity |> humidity
                   empty 25.
-                  forecast.Wind.Degree |> wind |> text 22. (Color.OrangeRed) 
+                  forecast.Wind.Degree |> wind |> text 22. Color.LightBlue
                   empty 5.
-                  forecast.Wind.Speed |> Speed.kmph |> int |> sprintf "%i km/h" |> text 18. Color.Beige 
+                  forecast.Wind.Speed |> Speed.kmph |> int |> sprintf "%i km/h" |> text 16. Color.Beige 
+                  empty 10.
                 ]).GridRow(x).GridColumn(y)
         
     let home content = 
@@ -144,9 +198,10 @@ module App =
     
     let fiveDaysForecast (model: CityForecast) = 
         let fiveDays = model.Days |> List.truncate 5
+        let city = if model.Country |> String.IsNullOrWhiteSpace then model.City else sprintf "%s, %s" model.City model.Country 
         View.StackLayout(padding = 20.0, verticalOptions = LayoutOptions.FillAndExpand,
             children = [ 
-                View.Label(text=model.City.ToUpper(), textColor=Color.Beige, backgroundColor=Color.FromHex("#0F4D8FAC"), fontSize=50, horizontalTextAlignment=TextAlignment.Center)
+                View.Label(text=city.ToUpper(), textColor=Color.Beige, backgroundColor=Color.FromHex("#0F4D8FAC"), fontSize=40, fontAttributes=FontAttributes.Bold, horizontalTextAlignment=TextAlignment.Center)
                 empty 20.
                 View.Grid(
                     rowdefs=["*"],

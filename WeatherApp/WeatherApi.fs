@@ -26,8 +26,6 @@ let url apiKey latitude longitude =
     uri.Uri
 
 let convert (forecast:ForecastApi.Root) = 
-    let city = sprintf "%s, %s" forecast.City.Name forecast.City.Country
-    
     let forecasts = 
         forecast.List
         |> Seq.groupBy(fun x -> x.DtTxt.Date)
@@ -44,7 +42,8 @@ let convert (forecast:ForecastApi.Root) =
                   Speed = sources |> Seq.map (fun w -> w.Wind.Speed) |> Seq.max |> Speed.mps } } )
         |> Seq.toList
     
-    { City = city 
+    { City = forecast.City.Name
+      Country = forecast.City.Country
       Days = forecasts }
 
 /// This apikey will be available during the fsharp advent. If you want to continue, please subscribe by using a free account to https://openweathermap.org
