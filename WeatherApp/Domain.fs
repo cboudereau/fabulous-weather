@@ -22,15 +22,30 @@ type Position =
     { Longitude: float
       Latitude: float }
 
+open FSharp.Data.UnitSystems.SI.UnitSymbols
+
+let km = 1000m<m>
+let hour = 3600m<s>
+
+module Temperature = 
+    let kelvin x = x * 1m<K>
+    let celcius x = 
+        x - 273.15m<K>
+        |> decimal
+
+module Speed = 
+    let mps x = x * 1m<m/s>
+    let kmph (x:decimal<m/s>) = x * hour / km 
+
 type Wind = 
     { Degree : decimal
-      Speed : decimal }
+      Speed : decimal<m/s> }
 
 type Forecast = 
     { Date:System.DateTime
       Weather:Weather
-      MinTemp:decimal
-      MaxTemp:decimal
+      MinTemp:decimal<K>
+      MaxTemp:decimal<K>
       Humidity:int
       Wind:Wind }
 

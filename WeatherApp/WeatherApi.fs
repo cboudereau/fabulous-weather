@@ -36,12 +36,12 @@ let convert (forecast:ForecastApi.Root) =
               Weather = 
                 sources |> Seq.collect(fun w -> w.Weather |> Seq.map (fun x -> x.Icon |> Weather.ofIcon)) 
                 |> Seq.fold Weather.worst Weather.Sunny 
-              MinTemp = sources |> Seq.map (fun w -> w.Main.TempMin) |> Seq.min
-              MaxTemp = sources |> Seq.map (fun w -> w.Main.TempMax) |> Seq.max
+              MinTemp = sources |> Seq.map (fun w -> w.Main.TempMin) |> Seq.min |> Temperature.kelvin
+              MaxTemp = sources |> Seq.map (fun w -> w.Main.TempMax) |> Seq.max |> Temperature.kelvin
               Humidity = sources |> Seq.map (fun w -> w.Main.Humidity) |> Seq.max
               Wind = 
-                { Degree = sources |> Seq.map (fun w -> w.Wind.Deg) |> Seq.max
-                  Speed = sources |> Seq.map (fun w -> w.Wind.Speed) |> Seq.max } } )
+                { Degree = sources |> Seq.map (fun w -> w.Wind.Deg) |> Seq.max 
+                  Speed = sources |> Seq.map (fun w -> w.Wind.Speed) |> Seq.max |> Speed.mps } } )
         |> Seq.toList
     
     { City = city 

@@ -11,14 +11,11 @@ module App =
     open System
     open Domain
 
-    type Model = 
-      { City:string
-        Coords: Position }
-
     type Msg = 
-        | NewPosition of Position
+        | PositionChanged of Position
+        | WeatherReceived of CityForecast
 
-    let initModel = { City= "Samoreau"; Coords= { Longitude=0.; Latitude=0. } }
+    let initModel = { City= "Waiting signal.."; Days=[] }
 
     let locator = CrossGeolocator.Current
     locator.DesiredAccuracy <- 100.
@@ -45,7 +42,7 @@ module App =
     let trackPosition () = 
         locator.PositionChanged 
         |> Async.AwaitEvent
-        |> Async.map (ofPositionArg >> NewPosition)
+        |> Async.map (ofPositionArg >> PositionChanged)
 
     let init () = 
         let cmd = 
@@ -55,26 +52,31 @@ module App =
                 if isListening then
                     lastPosition ()
                     |> Async.bind(Option.map Async.ret >> Option.defaultWith currentPosition)
-                    |> Async.map (NewPosition >> Some)
+                    |> Async.map (PositionChanged >> Some)
                 else Async.ret None)
             |> Cmd.ofAsyncMsgOption
         initModel, cmd 
 
     let update msg model =
         match msg with
-        | NewPosition p ->
-           { model with Coords = p }, trackPosition () |> Cmd.ofAsyncMsg
+        | PositionChanged p ->
+            model, WeatherApi.get p |> Async.map WeatherReceived |> Cmd.ofAsyncMsg
+        | WeatherReceived update ->
+            update, trackPosition () |> Cmd.ofAsyncMsg
     
     let empty height = 
         View.BoxView(
             color=Color(0.,0.,0.,0.),
             heightRequest=height)
 
-    let day x y = 
-        let text size color text = 
-            View.Label(text=text, textColor=color, fontSize=size, horizontalTextAlignment=TextAlignment.Center) 
+    let day x y (forecast:Forecast) = 
+        let basetext fontAttributes size color text = 
+            View.Label(text=text, textColor=color, fontSize=size, fontAttributes=fontAttributes, horizontalTextAlignment=TextAlignment.Center) 
         
-        let temp size color t = sprintf "%i°" t |> text size color
+        let text = basetext FontAttributes.None
+        let bold = basetext FontAttributes.Bold
+
+        let temp size color t = sprintf "%i°" (int t) |> text size color
         
         let separator color = 
             View.BoxView(
@@ -82,47 +84,77 @@ module App =
                 heightRequest=1.)
 
         let humidity h = sprintf "H %i%%" h |> text 18. Color.Beige
+        
+        let weatherIcon = function
+            | Cloudy -> "cloudy.png"
+            | PartialCloudy -> "partial_cloudy.png"
+            | Rainy -> "rainy.png"
+            | Snowy -> "snowy.png"
+            | Stormy -> "stormy.png"
+            | Sunny -> "sunny.png"
+        
+        let image source = View.Image(source=source)
+
+        let wind = function
+            | x when x < 45m -> "N"
+            | x when x < 90m -> "N-E"
+            | x when x < 135m -> "E"
+            | x when x < 180m -> "S-E"
+            | x when x < 225m -> "S"
+            | x when x < 270m -> "S-W"
+            | x when x < 325m -> "W"
+            | x when x < 360m -> "N-W"
+            | other -> failwithf "unexpected %f degree" other
+        
+        let dayOfWeek (d:DateTime) = d.ToString("ddd")
+
+        let day d = 
+            match d, d % 10 with
+            | x, _ when x >= 10 && x <= 13  -> sprintf "%ith" x
+            | x, 1 -> sprintf "%ist" x
+            | x, 2 -> sprintf "%ind" x
+            | x, 3 -> sprintf "%ird" x
+            | other,_ -> sprintf "%ith" other
 
         View.StackLayout(
             backgroundColor=Color(0., 0., 0., 0.4),
             children=
-                [ text 20. Color.Beige "Mon"
-                  View.Label(text="2nd", textColor=Color.Beige, fontSize=20., fontAttributes=FontAttributes.Bold, horizontalTextAlignment=TextAlignment.Center)
+                [ forecast.Date |> dayOfWeek |> text 20. Color.Beige 
+                  forecast.Date.Day |> day |> bold 20. Color.Beige 
                   empty 15.
-                  View.Image(source="stormy.png")
+                  forecast.Weather |> weatherIcon |> image
                   empty 15.
-                  temp 22. Color.Beige 20
+                  forecast.MaxTemp |> Temperature.celcius |> temp 22. Color.Beige
                   separator Color.SkyBlue
-                  temp 22. Color.SkyBlue 14
+                  forecast.MinTemp |> Temperature.celcius |> temp 22. Color.SkyBlue
                   empty 30.
-                  humidity 98
+                  forecast.Humidity |> humidity
                   empty 25.
-                  text 22. (Color.OrangeRed) "S-W"
+                  forecast.Wind.Degree |> wind |> text 22. (Color.OrangeRed) 
                   empty 5.
-                  text 18. Color.Beige "55 km/h"
+                  forecast.Wind.Speed |> Speed.kmph |> int |> sprintf "%i km/h" |> text 18. Color.Beige 
                 ]).GridRow(x).GridColumn(y)
         
-    
-    let view (model: Model) dispatch =
+    let home content = 
         View.ContentPage(
           title = "Weather",
           inputTransparent = true,
           backgroundImage = "bluesky.png",
-          content = View.StackLayout(padding = 20.0, verticalOptions = LayoutOptions.FillAndExpand,
+          content = content)
+    
+    let fiveDaysForecast (model: CityForecast) = 
+        let fiveDays = model.Days |> List.truncate 5
+        View.StackLayout(padding = 20.0, verticalOptions = LayoutOptions.FillAndExpand,
             children = [ 
-                View.Label(text="SAMOREAU", textColor=Color.Beige, backgroundColor=Color.FromHex("#0F4D8FAC"), fontSize=50, horizontalTextAlignment=TextAlignment.Center)
+                View.Label(text=model.City.ToUpper(), textColor=Color.Beige, backgroundColor=Color.FromHex("#0F4D8FAC"), fontSize=50, horizontalTextAlignment=TextAlignment.Center)
                 empty 20.
                 View.Grid(
                     rowdefs=["*"],
-                    coldefs=[ for _ in 1..5 -> "*" ],
-                    children=
-                        [ day 0 0
-                          day 0 1
-                          day 0 2
-                          day 0 3
-                          day 0 4 ]
-                    )
-            ]))
+                    coldefs=[ for _ in fiveDays -> "*" ],
+                    children = (fiveDays |> List.mapi (day 0) ) )
+                ])
+
+    let view (model: CityForecast) dispatch = model |> fiveDaysForecast |> home
 
     // Note, this declaration is needed if you enable LiveUpdate
     let program = Program.mkProgram init update view
