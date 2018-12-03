@@ -7,24 +7,8 @@ open Fabulous.DynamicViews
 open Xamarin.Forms
 open Plugin.Geolocator
 
-module Async = 
-    let inline bind f x = async.Bind(x, f)
-    let inline map f x = async.Bind(x, f >> async.Return)
-    let inline ret x = async.Return x
-
-module AsyncOption = 
-    let inline defaultValue v x = 
-        failwith "not yet implemented" 
-    let inline orElse f g = 
-            f |> Async.bind (function Some x' -> Some x' |> Async.ret | None -> g)
-    module Operators = 
-        let inline (<|>) f g = orElse f g
-
-open AsyncOption.Operators
-
 module App = 
     open System
-    open Xamarin.Forms
 
     type Position = 
         { Longitude: float

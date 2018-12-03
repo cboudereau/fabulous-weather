@@ -6,6 +6,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Include="forecast.json" />
+    <None Include="weather.fsx" />
+    <Compile Include="Domain.fs" />
+    <Compile Include="Async.fs" />
+    <Compile Include="WeatherApi.fs" />
     <Compile Include="WeatherApp.fs" />
   </ItemGroup>
   <ItemGroup>
