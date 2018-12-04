@@ -125,21 +125,17 @@ module App =
             color=Color(0.,0.,0.,0.),
             heightRequest=height)
 
-    let basetext fontAttributes size color text = 
-        View.Label(text=text, textColor=color, fontSize=size, fontAttributes=fontAttributes, horizontalTextAlignment=TextAlignment.Center) 
-    
-    let text = basetext FontAttributes.None
-    let bold = basetext FontAttributes.Bold
-
-    let temp size color t = sprintf "%i°" (int t) |> text size color
-    
+    let stack height child = 
+        View.StackLayout(
+            heightRequest=height,
+            verticalOptions=LayoutOptions.CenterAndExpand,
+            children=[child])
+        
     let separator color = 
         View.BoxView(
             color=color, 
             heightRequest=1.)
 
-    let humidity h = sprintf "H %i%%" h |> text 16. Color.Beige
-    
     let weatherIcon = function
         | Cloudy -> "cloudy.png"
         | PartialCloudy -> "partial_cloudy.png"
@@ -148,12 +144,6 @@ module App =
         | Stormy -> "stormy.png"
         | Sunny -> "sunny.png"
     
-    let stack height child = 
-        View.StackLayout(
-            heightRequest=height,
-            verticalOptions=LayoutOptions.CenterAndExpand,
-            children=[child])
-
     let image source = View.Image(source=source) |> stack 100.
 
     let wind = function
@@ -178,6 +168,16 @@ module App =
         | other,_ -> sprintf "%ith" other
 
     let day x y (forecast:Forecast) = 
+        let basetext fontAttributes size color text = 
+            View.Label(text=text, textColor=color, fontSize=size, fontAttributes=fontAttributes, horizontalTextAlignment=TextAlignment.Center) 
+    
+        let text = basetext FontAttributes.None
+        let bold = basetext FontAttributes.Bold
+
+        let temp size color t = sprintf "%i°" (int t) |> text size color
+        
+        let humidity h = sprintf "H %i%%" h |> text 16. Color.Beige
+        
         View.StackLayout(
             backgroundColor=Color(0., 0., 0., 0.4),
             children=
@@ -214,8 +214,8 @@ module App =
                 View.Label(text=city.ToUpper(), textColor=Color.Beige, backgroundColor=Color.FromHex("#0F4D8FAC"), fontSize=40, fontAttributes=FontAttributes.Bold, horizontalTextAlignment=TextAlignment.Center)
                 empty 20.
                 View.Grid(
-                    rowdefs=[box "*"],
-                    coldefs=[ for _ in fiveDays -> box "*" ],
+                    rowdefs=["*"],
+                    coldefs=[ for _ in fiveDays -> "*" ],
                     children = (fiveDays |> List.mapi (day 0) ) )
                 ])
 
