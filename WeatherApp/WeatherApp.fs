@@ -223,7 +223,7 @@ module App =
     let view (model: CityForecast) dispatch = model |> fiveDaysForecast |> home
 
     // Note, this declaration is needed if you enable LiveUpdate
-    let program = Program.mkProgram mockup update view
+    let program = Program.mkProgram init update view
 
 type App () as app = 
     inherit Application ()
