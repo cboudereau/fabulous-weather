@@ -125,64 +125,64 @@ module App =
             color=Color(0.,0.,0.,0.),
             heightRequest=height)
 
+    let basetext fontAttributes size color text = 
+        View.Label(text=text, textColor=color, fontSize=size, fontAttributes=fontAttributes, horizontalTextAlignment=TextAlignment.Center) 
+    
+    let text = basetext FontAttributes.None
+    let bold = basetext FontAttributes.Bold
+
+    let temp size color t = sprintf "%i°" (int t) |> text size color
+    
+    let separator color = 
+        View.BoxView(
+            color=color, 
+            heightRequest=1.)
+
+    let humidity h = sprintf "H %i%%" h |> text 16. Color.Beige
+    
+    let weatherIcon = function
+        | Cloudy -> "cloudy.png"
+        | PartialCloudy -> "partial_cloudy.png"
+        | Rainy -> "rainy.png"
+        | Snowy -> "snowy.png"
+        | Stormy -> "stormy.png"
+        | Sunny -> "sunny.png"
+    
+    let stack height child = 
+        View.StackLayout(
+            heightRequest=height,
+            verticalOptions=LayoutOptions.CenterAndExpand,
+            children=[child])
+
+    let image source = View.Image(source=source) |> stack 100.
+
+    let wind = function
+        | x when x < 45m -> "N"
+        | x when x < 90m -> "N-E"
+        | x when x < 135m -> "E"
+        | x when x < 180m -> "S-E"
+        | x when x < 225m -> "S"
+        | x when x < 270m -> "S-W"
+        | x when x < 325m -> "W"
+        | x when x < 360m -> "N-W"
+        | other -> failwithf "unexpected %f degree" other
+    
+    let dayOfWeek (d:DateTime) = d.ToString("ddd")
+
+    let ordinalDay d = 
+        match d, d % 10 with
+        | x, _ when x >= 10 && x <= 13  -> sprintf "%ith" x
+        | x, 1 -> sprintf "%ist" x
+        | x, 2 -> sprintf "%ind" x
+        | x, 3 -> sprintf "%ird" x
+        | other,_ -> sprintf "%ith" other
+
     let day x y (forecast:Forecast) = 
-        let basetext fontAttributes size color text = 
-            View.Label(text=text, textColor=color, fontSize=size, fontAttributes=fontAttributes, horizontalTextAlignment=TextAlignment.Center) 
-        
-        let text = basetext FontAttributes.None
-        let bold = basetext FontAttributes.Bold
-
-        let temp size color t = sprintf "%i°" (int t) |> text size color
-        
-        let separator color = 
-            View.BoxView(
-                color=color, 
-                heightRequest=1.)
-
-        let humidity h = sprintf "H %i%%" h |> text 18. Color.Beige
-        
-        let weatherIcon = function
-            | Cloudy -> "cloudy.png"
-            | PartialCloudy -> "partial_cloudy.png"
-            | Rainy -> "rainy.png"
-            | Snowy -> "snowy.png"
-            | Stormy -> "stormy.png"
-            | Sunny -> "sunny.png"
-        
-        let stack height child = 
-            View.StackLayout(
-                heightRequest=height,
-                verticalOptions=LayoutOptions.CenterAndExpand,
-                children=[child])
-
-        let image source = View.Image(source=source) |> stack 100.
-
-        let wind = function
-            | x when x < 45m -> "N"
-            | x when x < 90m -> "N-E"
-            | x when x < 135m -> "E"
-            | x when x < 180m -> "S-E"
-            | x when x < 225m -> "S"
-            | x when x < 270m -> "S-W"
-            | x when x < 325m -> "W"
-            | x when x < 360m -> "N-W"
-            | other -> failwithf "unexpected %f degree" other
-        
-        let dayOfWeek (d:DateTime) = d.ToString("ddd")
-
-        let day d = 
-            match d, d % 10 with
-            | x, _ when x >= 10 && x <= 13  -> sprintf "%ith" x
-            | x, 1 -> sprintf "%ist" x
-            | x, 2 -> sprintf "%ind" x
-            | x, 3 -> sprintf "%ird" x
-            | other,_ -> sprintf "%ith" other
-
         View.StackLayout(
             backgroundColor=Color(0., 0., 0., 0.4),
             children=
                 [ forecast.Date |> dayOfWeek |> text 20. Color.Beige 
-                  forecast.Date.Day |> day |> bold 20. Color.Beige 
+                  forecast.Date.Day |> ordinalDay |> bold 20. Color.Beige 
                   empty 15.
                   forecast.Weather |> weatherIcon |> image
                   forecast.MaxTemp |> Temperature.celcius |> temp 22. Color.Beige
@@ -193,10 +193,11 @@ module App =
                   empty 25.
                   forecast.Wind.Degree |> wind |> text 22. Color.LightBlue
                   empty 5.
-                  forecast.Wind.Speed |> Speed.kmph |> int |> sprintf "%i km/h" |> text 16. Color.Beige 
+                  forecast.Wind.Speed |> Speed.kmph |> int |> sprintf "%i km/h" |> text 14. Color.Beige 
                   empty 10.
                 ]).GridRow(x).GridColumn(y)
         
+    ///This function contains the Background and the title of the home page
     let home content = 
         View.ContentPage(
           title = "Weather",
@@ -204,6 +205,7 @@ module App =
           backgroundImage = "bluesky.png",
           content = content)
     
+    ///This is the part that contains 5 days forecast
     let fiveDaysForecast (model: CityForecast) = 
         let fiveDays = model.Days |> List.truncate 5
         let city = if model.Country |> String.IsNullOrWhiteSpace then model.City else sprintf "%s, %s" model.City model.Country 
@@ -212,15 +214,16 @@ module App =
                 View.Label(text=city.ToUpper(), textColor=Color.Beige, backgroundColor=Color.FromHex("#0F4D8FAC"), fontSize=40, fontAttributes=FontAttributes.Bold, horizontalTextAlignment=TextAlignment.Center)
                 empty 20.
                 View.Grid(
-                    rowdefs=["*"],
-                    coldefs=[ for _ in fiveDays -> "*" ],
+                    rowdefs=[box "*"],
+                    coldefs=[ for _ in fiveDays -> box "*" ],
                     children = (fiveDays |> List.mapi (day 0) ) )
                 ])
 
+    /// This function is our view composition
     let view (model: CityForecast) dispatch = model |> fiveDaysForecast |> home
 
     // Note, this declaration is needed if you enable LiveUpdate
-    let program = Program.mkProgram init update view
+    let program = Program.mkProgram mockup update view
 
 type App () as app = 
     inherit Application ()
