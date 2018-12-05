@@ -38,7 +38,7 @@ This architecture loves domain driven design. In our case we bind the position c
   Those commands are not technical commands but a part of our domain.
 
 ## Responsive design
-  It is possible to a send a command in the future by using fsharp async pattern
+  It is possible to send a command in the future by using fsharp async pattern
   
   Response design + race condition don't exist anymore !
 
