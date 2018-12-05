@@ -329,7 +329,7 @@ When the application starts, I would like to use the last or current position as
 
 - Start sensor
 - Get the last known position or the current if it was not cached
-- Notify that a new Position
+- Notify a new Position
 
 Here is the fsharp code to do that.
 
