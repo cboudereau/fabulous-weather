@@ -288,7 +288,7 @@ You can now debug the application and use the Fabulous Live update feature descr
 Now that we have the UI part, lets track position updates!
 
 ## Using GPS sensor through GeoLocator Xamarin plugins
-The weather app tracks position and display forecast occording to your location.
+The weather app tracks position and display forecast according to your location.
 
 Thanks to the awesome plugins [GeoLocator](https://github.com/jamesmontemagno/GeolocatorPlugin) (very well documented), I transpose the csharp code to a fsharp one.
 
