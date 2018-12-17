@@ -20,7 +20,7 @@ There is tons of articles that explain it in details.
 - The powerfull of elm architecture with this [famous elm video](https://elm-lang.org/blog/time-travel-made-easy)
 - The [elmish architecture](https://elmish.github.io/elmish/)
 - Implementations : 
-  - Web development with [Fable](https://fable.io/) : fsharp + bable js, by transpiling fsharp
+  - Web development with [Fable](https://fable.io/) : [fsharp](https://fsharp.org/) + [Babel](https://babeljs.io/), by transpiling fsharp
   - App development with [Fabulous](https://fsprojects.github.io/Fabulous/) and [Xamarin](https://visualstudio.microsoft.com/xamarin/) : fsharp + xamarin dynamic form
   
  > What are key concepts ?
