@@ -17,7 +17,7 @@ Fabulous is not a MVVM architecture it uses in fact a Model View Update architec
 
 There is tons of articles that explain it in details.
 
-- The powerfull of elm architecture with this [famous elm video](https://elm-lang.org/blog/time-travel-made-easy)
+- The powerful of elm architecture with this [famous elm video](https://elm-lang.org/blog/time-travel-made-easy)
 - The [elmish architecture](https://elmish.github.io/elmish/)
 - Implementations : 
   - Web development with [Fable](https://fable.io/) : [fsharp](https://fsharp.org/) + [Babel](https://babeljs.io/), by transpiling fsharp
